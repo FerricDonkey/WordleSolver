@@ -57,41 +57,17 @@ void get_remaining_answers(
     float& stddev
 ) {
     std::size_t answer_index = 0;
-    std::uint32_t running_total = 0;
+    uint32_t running_total = 0;
     for (const auto& answer : possible_answers) {
         WordRestriction restriction = base_restriction;
         std::vector<int> response = calculate_response(guess, answer);
-        bool update_worked = true;
-        try {
-            restriction.update_from_word_guess(guess, response);
-        } catch (InvalidRestriction& e) {
-            update_worked = false;
-        }
-
-        if (update_worked && !restriction.is_word_allowed(answer)) {
-            base_restriction.print();
-            std::cout << "Answer: " << word_vec_to_string(answer)
-                << "\nGuess: " << word_vec_to_string(guess)
-                << "\nResponse:";
-
-            for (auto r : response) {
-                std::cout << " " << r;
-            }
-            std::cout << std::endl;
-
-            restriction.print();
-            throw std::runtime_error(
-                std::string("Answer ") + word_vec_to_string(answer)
-                + " was not allowed by validly updated requirement (above)."
-            );
-        }
+        restriction.update_from_word_guess(guess, response);
 
         num_answers_dest_vec[answer_index] = 0;
-        if (update_worked) {
-            for (const auto& possible_answer : possible_answers) {
-                num_answers_dest_vec[answer_index] += restriction.is_word_allowed(possible_answer);
-            }
+        for (const auto& possible_answer : possible_answers) {
+            num_answers_dest_vec[answer_index] += restriction.is_word_allowed(possible_answer);
         }
+
         running_total += num_answers_dest_vec[answer_index];
         answer_index++;
     }
@@ -114,8 +90,7 @@ void get_remaining_answers(
     for (auto num_answers : num_answers_dest_vec) {
         stddev += (num_answers - mean) * (num_answers - mean);
     }
-    stddev /= possible_answers.size();
-    stddev = sqrt(stddev);
+    stddev = sqrt(stddev / possible_answers.size());
 }
 
 static inline bool float_is_less_than(float a, float b) {
@@ -231,10 +206,10 @@ void print_suggestions(
         << "  -------------------------------------\n";
     for (auto guess_index : sorted_guess_indexes) {
         std::cout << "  " << word_vec_to_string(possible_guesses[guess_index]) << " | "
-            << std::fixed << std::setprecision(2) << std::setw(7)
-            << medians[guess_index] << " | " << std::setw(7)
-            << means[guess_index] << std::setw(0) << " | " << std::setw(7)
-            << stddevs[guess_index] << std::setw(0) << " |"
+            << std::fixed << std::setprecision(2)
+            << std::setw(7) << medians[guess_index] << " | "
+            << std::setw(7) << means[guess_index]   << " | "
+            << std::setw(7) << stddevs[guess_index] << " |"
             << (
                 restriction.is_word_allowed(possible_guesses[guess_index])
                 ? " (possible answer)" : ""

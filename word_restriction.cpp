@@ -266,14 +266,14 @@ void WordRestriction::update_from_word_guess(
 
     // If any position cannot have any letters, that's invalid
     if (std::any_of(
-        possible_letters.begin(),
-        possible_letters.end(),
+        pos_to_allowed.begin(),
+        pos_to_allowed.end(),
         [](uint32_t letter_flags) {return letter_flags == 0; }
     )) {
         std::string error_str = "ERROR: The following location(s) have no allowed letters:";
         bool found_one = false;
         for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
-            if (!possible_letters[letter_index]) {
+            if (!pos_to_allowed[letter_index]) {
                 if (found_one) error_str += ", ";
                 error_str += " ";
                 found_one = true;

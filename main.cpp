@@ -241,6 +241,12 @@ int main(int argc, char** argv) {
 
     // test(possible_answers, possible_guesses, restriction);
     // return 0;
+    //print_suggestions(
+    //    possible_guesses,
+    //    possible_answers,
+    //    restriction
+    //);
+    //return 0;
 
     while (true) {
         std::cout << "\nRemaining Solutions: " << possible_answers.size() << "\n" << std::endl;

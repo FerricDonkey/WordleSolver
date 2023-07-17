@@ -47,10 +47,13 @@ std::vector<std::vector<uint32_t>> WordRestriction::get_surviving_words(
     return surviving_words;
 }
 
+static uint32_t letter_counts[26];
+#pragma omp threadprivate(letter_counts)
+
 bool WordRestriction::is_word_allowed(
     const std::vector<uint32_t>& word
 ) const {
-    std::vector<uint32_t> letter_counts(26);
+    memset(letter_counts, 0, 26 * sizeof(uint32_t));
     uint32_t index = 0;
     for (uint32_t letter : word) {
         if (!can_letter_be_at_index(letter, index)) {

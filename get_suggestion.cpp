@@ -22,7 +22,7 @@ inline ResponseArray calculate_response(
     const WordArray& guess,
     const WordArray& answer
 ){
-    ResponseArray response;
+    ResponseArray response = EMPTY_RESPONSE;
     AlphabetArray letter_count = EMPTY_ALPHABET_ARRAY;
     AlphabetArray letter_to_green_count = EMPTY_ALPHABET_ARRAY;
 

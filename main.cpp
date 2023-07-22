@@ -13,10 +13,12 @@
 
 const std::string WORDS_FILENAME = "words_lenN_466551.txt";
 
-static inline std::vector<uint32_t> string_to_word_vec(const std::string& word) {
-    std::vector<uint32_t> word_vec;
+static inline WordArray string_to_word_arr(const std::string& word) {
+    WordArray word_vec;
+    uint32_t index = 0;
     for (auto c : word) {
-        word_vec.push_back(c - 'a');
+        word_vec[index] = c - 'a';
+        index++;
     }
     return word_vec;
 }
@@ -88,10 +90,9 @@ std::vector<std::string> get_words_from_file(const std::string& filename) {
     return words;
 }
 
-std::vector<std::vector<uint32_t>> convert_words(const std::vector<std::string>& words_as_strings) {
-    std::vector<std::vector<uint32_t>> converted_words(
-        words_as_strings.size(),
-        std::vector<uint32_t>(WORD_LENGTH)
+std::vector<WordArray> convert_words(const std::vector<std::string>& words_as_strings) {
+    std::vector<WordArray> converted_words(
+        words_as_strings.size()
     );
 
     std::size_t word_index = 0;
@@ -105,7 +106,7 @@ std::vector<std::vector<uint32_t>> convert_words(const std::vector<std::string>&
     return converted_words;
 }
 
-std::vector<int> get_response_from_user() {
+ResponseArray get_response_from_user() {
     std::string user_input;
     while (true) {
         std::cout << "Enter response (2: green, 1: yellow, 0: gray): " << std::flush;
@@ -123,14 +124,16 @@ std::vector<int> get_response_from_user() {
         std::cout << "BAD INPUT." << std::endl;
     }
 
-    std::vector<int> response;
+    ResponseArray response;
+    uint32_t index = 0;
     for (auto c : user_input) {
-        response.push_back(c - '0');
+        response[index] = c - '0';
+        index++;
     }
     return response;
 }
 
-std::vector<uint32_t> get_word_from_user() {
+WordArray get_word_from_user() {
     std::string user_input;
     while (true) {
         std::cout << "Enter word (all lowercase, length "<< WORD_LENGTH << "): " << std::flush;
@@ -148,7 +151,7 @@ std::vector<uint32_t> get_word_from_user() {
         std::cout << "BAD INPUT." << std::endl;
     }
 
-    return string_to_word_vec(user_input);
+    return string_to_word_arr(user_input);
 }
 
 int get_user_action() {
@@ -175,13 +178,13 @@ int get_user_action() {
 
 
 void test(
-    std::vector<std::vector<uint32_t>>& possible_answers,
-    std::vector<std::vector<uint32_t>>& possible_guesses,
+    std::vector<WordArray>& possible_answers,
+    std::vector<WordArray>& possible_guesses,
     WordRestriction& restriction
 ) {
-    auto answer = string_to_word_vec("cower");
-    auto guess1 = string_to_word_vec("raise");
-    auto guess2 = string_to_word_vec("deter");
+    auto answer = string_to_word_arr("cower");
+    auto guess1 = string_to_word_arr("raise");
+    auto guess2 = string_to_word_arr("deter");
 
     for (const auto guess : {guess1, guess2}) {
         auto response = calculate_response(guess, answer);
@@ -191,11 +194,11 @@ void test(
 
         restriction.update_from_word_guess(
             guess,
-            calculate_response(guess, answer)
+            response
         );
         restriction.print();
         possible_answers = restriction.get_surviving_words(possible_answers);
-        std::vector<std::vector<uint32_t>> new_possible_guesses;
+        std::vector<WordArray> new_possible_guesses;
         new_possible_guesses.reserve(possible_guesses.size());
         for (auto& guess : possible_guesses) {
             if (restriction.can_provide_new_information(guess))
@@ -213,6 +216,12 @@ void test(
 }
 
 int main(int argc, char** argv) {
+    /*WordArray test_arr = {3};
+    for (auto t : test_arr) {
+        std::cerr << t << std::endl;
+    }
+    return 0;*/
+
     const std::string* words_file_p = nullptr;
     if (
         argc > 2
@@ -227,40 +236,41 @@ int main(int argc, char** argv) {
         words_file_p = &WORDS_FILENAME;
     }
 
-    std::vector<std::vector<uint32_t>> possible_guesses = convert_words(
+    std::vector<WordArray> possible_guesses = convert_words(
         get_words_from_file(
             *words_file_p
         )
     );
-    std::vector<std::vector<uint32_t>> possible_answers(possible_guesses);
+    std::vector<WordArray> possible_answers(possible_guesses);
     if (argc == 2) {
         delete words_file_p;
     }
 
     WordRestriction restriction;
 
-    // test(possible_answers, possible_guesses, restriction);
-    // return 0;
-    //print_suggestions(
-    //    possible_guesses,
-    //    possible_answers,
-    //    restriction
-    //);
-    //return 0;
+    test(possible_answers, possible_guesses, restriction);
+    return 0;
+    /*
+    print_suggestions(
+        possible_guesses,
+        possible_answers,
+        restriction
+    );
+    return 0;*/
 
     while (true) {
         std::cout << "\nRemaining Solutions: " << possible_answers.size() << "\n" << std::endl;
         int user_action = get_user_action();
         switch (user_action) {
             case 1: {// enter new
-                std::vector<std::uint32_t> word = get_word_from_user();
-                std::vector<int> response = get_response_from_user();
+                WordArray word = get_word_from_user();
+                ResponseArray response = get_response_from_user();
                 restriction.update_from_word_guess(word, response);
                 possible_answers = restriction.get_surviving_words(possible_answers);
 
                 // Along the lines of std::remove_if, except that requires nonsense
                 // and almost as much code
-                std::vector<std::vector<uint32_t>> new_possible_guesses;
+                std::vector<WordArray> new_possible_guesses;
                 new_possible_guesses.reserve(possible_guesses.size());
                 for (auto& guess : possible_guesses) {
                     if (restriction.can_provide_new_information(guess))

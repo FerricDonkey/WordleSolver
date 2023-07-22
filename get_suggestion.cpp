@@ -16,15 +16,15 @@
 #include "word_restriction.hpp"
 #include "common.hpp"
 
-static const float EPSILON = 0.00001;
+static constexpr float EPSILON = 0.00001;
 
-inline std::vector<int> calculate_response(
-    const std::vector<uint32_t>& guess,
-    const std::vector<uint32_t>& answer
+inline ResponseArray calculate_response(
+    const WordArray& guess,
+    const WordArray& answer
 ){
-    std::vector<int> response(WORD_LENGTH);
-    std::vector<uint32_t> letter_count(26);
-    std::vector<uint32_t> letter_to_green_count(26);
+    ResponseArray response;
+    AlphabetArray letter_count = EMPTY_ALPHABET_ARRAY;
+    AlphabetArray letter_to_green_count = EMPTY_ALPHABET_ARRAY;
 
     for (int index = 0; index < WORD_LENGTH; index++) {
         if (answer[index] == guess[index]) {
@@ -48,8 +48,8 @@ inline std::vector<int> calculate_response(
 }
 
 void get_remaining_answers(
-    const std::vector<uint32_t>& guess,
-    const std::vector<std::vector<uint32_t>>& possible_answers,
+    const WordArray& guess,
+    const std::vector<WordArray>& possible_answers,
     const WordRestriction& base_restriction,
     std::vector<uint32_t>& num_answers_dest_vec,
     float& mean,
@@ -60,7 +60,7 @@ void get_remaining_answers(
     uint32_t running_total = 0;
     for (const auto& answer : possible_answers) {
         WordRestriction restriction = base_restriction;
-        std::vector<int> response = calculate_response(guess, answer);
+        ResponseArray response = calculate_response(guess, answer);
         restriction.update_from_word_guess(guess, response);
 
         num_answers_dest_vec[answer_index] = 0;
@@ -108,8 +108,8 @@ static inline bool guess_comparitor(
     float median1,
     float mean2,
     float median2,
-    const std::vector<uint32_t>& guess1,
-    const std::vector<uint32_t>& guess2,
+    const WordArray& guess1,
+    const WordArray& guess2,
     const WordRestriction& restriction
 ) {
     bool guess1_possible = restriction.is_word_allowed(guess1);
@@ -136,8 +136,8 @@ static inline bool guess_comparitor(
 
 
 void print_suggestions(
-    const std::vector<std::vector<uint32_t>>& possible_guesses,
-    const std::vector<std::vector<uint32_t>>& possible_answers,
+    const std::vector<WordArray>& possible_guesses,
+    const std::vector<WordArray>& possible_answers,
     const WordRestriction& restriction
 ) {
     std::vector<std::vector<uint32_t>> guess_index_to_answer_index_to_num_remaining(

@@ -13,7 +13,7 @@
 #include "word_restriction.hpp"
 
 std::vector<int> WordRestriction::get_surviving_word_indexes(
-    const std::vector<std::vector<uint32_t>>& words
+    const std::vector<WordArray>& words
 ) const {
     std::vector<int> allowed_word_indexes;
 
@@ -31,10 +31,10 @@ std::vector<int> WordRestriction::get_surviving_word_indexes(
     return allowed_word_indexes;
 }
 
-std::vector<std::vector<uint32_t>> WordRestriction::get_surviving_words(
-    const std::vector<std::vector<uint32_t>>& words
+std::vector<WordArray> WordRestriction::get_surviving_words(
+    const std::vector<WordArray>& words
 ) const {
-    std::vector<std::vector<uint32_t>> surviving_words;
+    std::vector<WordArray> surviving_words;
 
     std::cout << "Initial Words Len: " << words.size() << std::endl;
 
@@ -47,13 +47,14 @@ std::vector<std::vector<uint32_t>> WordRestriction::get_surviving_words(
     return surviving_words;
 }
 
-static uint32_t letter_counts[26];
-#pragma omp threadprivate(letter_counts)
 
 bool WordRestriction::is_word_allowed(
-    const std::vector<uint32_t>& word
+    const WordArray& word
 ) const {
-    memset(letter_counts, 0, 26 * sizeof(uint32_t));
+    static AlphabetArray letter_counts;
+    #pragma omp threadprivate(letter_counts)
+    letter_counts.fill(0);
+
     uint32_t index = 0;
     for (uint32_t letter : word) {
         if (!can_letter_be_at_index(letter, index)) {
@@ -63,7 +64,7 @@ bool WordRestriction::is_word_allowed(
         index++;
     }
 
-    for (uint32_t letter = 0; letter < 26; letter++) {
+    for (uint32_t letter: word) {
         if (
             letter_counts[letter] > max_possible[letter]
             || letter_counts[letter] < min_possible[letter]
@@ -76,9 +77,12 @@ bool WordRestriction::is_word_allowed(
 }
 
 bool WordRestriction::can_provide_new_information(
-    const std::vector<uint32_t>& word
+    const WordArray& word
 ) const {
-    std::unordered_map<uint32_t, uint32_t> letter_counts;
+    static AlphabetArray letter_counts;
+    #pragma omp threadprivate(letter_counts)
+    letter_counts.fill(0);
+
     for (int index = 0; index < WORD_LENGTH; index++) {
         if (
             can_letter_be_at_index(word[index], index)
@@ -89,10 +93,16 @@ bool WordRestriction::can_provide_new_information(
         letter_counts[word[index]]++;
     }
 
-    for (const auto& [letter, count] : letter_counts) {
+    uint32_t seen_letters = 0;
+    for (int index = 0; index < WORD_LENGTH; index++) {
+        uint32_t letter = word[index];
+        if (seen_letters & CHAR_FLAGS[letter]) {
+            continue;
+        }
+        seen_letters ^= CHAR_FLAGS[letter];
         if (
-            count > min_possible[letter]
-            && count < max_possible[letter]
+            letter_counts[letter] > min_possible[letter]
+            && letter_counts[letter] < max_possible[letter]
         ) {
             return true;
         }
@@ -128,16 +138,16 @@ uint32_t WordRestriction::num_possible_letters_at_loc(int index) const {
 
 // TOO LONG - break up into multiple functions probably.
 void WordRestriction::update_from_word_guess(
-    const std::vector<uint32_t>& guess,
-    const std::vector<int>& response
+    const WordArray& guess,
+    const ResponseArray& response
 ){
-    std::unordered_map<uint32_t, uint32_t> submitted_letter_counts;
-    std::unordered_map<uint32_t, uint32_t> response_letter_counts;
-    std::vector<uint32_t> green_counts(26);
+    AlphabetArray submitted_letter_counts = EMPTY_ALPHABET_ARRAY;
+    AlphabetArray response_letter_counts = EMPTY_ALPHABET_ARRAY;
+    AlphabetArray green_counts = EMPTY_ALPHABET_ARRAY;
 
     // Handle individual index knowledge, and count how many letters
     // were in the submitted word / are in the solution word.
-    for (int index = 0; index < 5; index++) {
+    for (int index = 0; index < WORD_LENGTH; index++) {
         uint32_t this_letter = guess[index];
         submitted_letter_counts[this_letter]++;
 
@@ -159,7 +169,12 @@ void WordRestriction::update_from_word_guess(
 
     // Adjust min/max possible of each letter according to above counts.
     // AND removing gray letters from other locations, as possible
-    for (const auto& [letter, submitted_count] : submitted_letter_counts) {
+    uint32_t seen_letters = 0;
+    for (uint32_t letter: guess) {
+        if (seen_letters & CHAR_FLAGS[letter]) {
+            continue;
+        }
+        seen_letters ^= CHAR_FLAGS[letter];  // xor is fine, only will do once per letter
         // Note: response of 21000 to aabbb only tells us that there is at least 2 a's, there
         //       may be more. but response of 21000 to aaabb tells us that there's exactly 2 a's
         min_possible[letter] = std::max(min_possible[letter], response_letter_counts[letter]);
@@ -167,13 +182,13 @@ void WordRestriction::update_from_word_guess(
         // If we submitted more a's than the response colored green/yellow, then we know
         // that number green a's + number_yellow a's (ie response_letter_counts[letter])
         // is exactly the number of a's
-        if (submitted_count > response_letter_counts[letter]) {
+        if (submitted_letter_counts[letter] > response_letter_counts[letter]) {
             max_possible[letter] = response_letter_counts[letter];
         }
 
         // Handle removing gray letters from other locations, if possible.
         if (
-            submitted_count > response_letter_counts[letter] // there was a gray <letter>
+            submitted_letter_counts[letter] > response_letter_counts[letter] // there was a gray <letter>
             && response_letter_counts[letter] == green_counts[letter] // we know where any/all such <letters> are
         ){
             for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
@@ -190,12 +205,14 @@ void WordRestriction::update_from_word_guess(
     // 3 of anything else. Make those adjustments
     uint32_t sum_of_mins = std::accumulate(min_possible.begin(), min_possible.end(), 0);
     if (sum_of_mins > WORD_LENGTH) {
-        throw InvalidRestriction(
+        std::string error_msg = (
             std::string("ERROR: Sum of minimum counts of letters is ")
             + std::to_string(sum_of_mins)
             + " which is greater than word length of "
             + std::to_string(WORD_LENGTH)
         );
+        std::cerr << error_msg << std::endl;
+        throw InvalidRestriction(error_msg);
     }
 
     if (sum_of_mins > 0) {

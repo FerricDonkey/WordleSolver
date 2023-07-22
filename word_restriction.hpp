@@ -11,7 +11,7 @@
 // binary number with 1 in bits 0-2WORD_LENGTH, inclusive
 static const uint32_t ANY_CHAR = 0x3ffffff;
 
-const std::vector<uint32_t> CHAR_FLAGS = {
+constexpr AlphabetArray CHAR_FLAGS = {
     0x1,
     0x2,
     0x4,
@@ -55,35 +55,28 @@ public:
 
 class WordRestriction {
 public:
-    std::vector<uint32_t> min_possible = std::vector<uint32_t>(26);
-    std::vector<uint32_t> max_possible = {
-        WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH,
-        WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH,
-        WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH,
-        WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH,
-        WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH, WORD_LENGTH,
-        WORD_LENGTH
-    };
-    std::vector<uint32_t> pos_to_allowed = {
+    AlphabetArray min_possible = EMPTY_ALPHABET_ARRAY;
+    AlphabetArray max_possible = WORD_LEN_ALPHABET_ARRAY;
+    WordArray pos_to_allowed = {  // Ugh
         ANY_CHAR, ANY_CHAR, ANY_CHAR, ANY_CHAR, ANY_CHAR
     };
 
 
     void update_from_word_guess(
-        const std::vector<uint32_t>& guess,
-        const std::vector<int>& response
+        const WordArray& guess,
+        const ResponseArray& response
     );
 
-    bool can_provide_new_information(const std::vector<uint32_t>& word) const;
+    bool can_provide_new_information(const WordArray& word) const;
     bool can_letter_be_at_index(uint32_t letter, int index) const;
     uint32_t num_possible_letters_at_loc(int index) const;
 
-    bool is_word_allowed(const std::vector<uint32_t>& word) const;
+    bool is_word_allowed(const WordArray& word) const;
     std::vector<int> get_surviving_word_indexes(
-        const std::vector<std::vector<uint32_t>>& words
+        const std::vector<WordArray>& words
     ) const;
-    std::vector<std::vector<uint32_t>> get_surviving_words(
-        const std::vector<std::vector<uint32_t>>& words
+    std::vector<WordArray> get_surviving_words(
+        const std::vector<WordArray>& words
     ) const;
 
     void print() const;

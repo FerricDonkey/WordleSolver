@@ -222,48 +222,90 @@ void test(
     );
 }
 
-int main(int argc, char** argv) {
-    /*WordArray test_arr = {3};
-    for (auto t : test_arr) {
-        std::cerr << t << std::endl;
-    }
-    return 0;*/
 
+class CommandLineParser {
+public:
+    bool recieved_help_arg = false;
+    bool do_test = false;
+    bool do_big_search = false;
     const std::string* words_file_p = nullptr;
-    if (
-        argc > 2
-        || (argc == 2 && std::string(argv[1]) == "--help")
-    ) {
-        std::cout << argv[0] << " takes 0 or 1 positional arguments. If 1, "
-            << "path to file containing one word per line." << std::endl;
+
+    CommandLineParser() = default;
+    CommandLineParser(int argc, char** argv) {
+        for (int arg_i = 1; arg_i < argc; arg_i++) {
+            if (std::string("--help") == argv[arg_i]) {
+                recieved_help_arg = true;
+                return;
+            } else if (std::string("--test") == argv[arg_i]) {
+                do_test = true;
+            } else if (std::string("--search") == argv[arg_i]){
+                do_big_search = true;
+            } else {
+                if (words_file_p != nullptr) {
+                    throw std::invalid_argument("File supplied twice");
+                }
+                words_file_p = new std::string(argv[arg_i]);
+            }
+        }
+
+        if (do_big_search && do_test) {
+            throw std::invalid_argument("Cannot use --test with --search.");
+        }
+
+        if (words_file_p == nullptr) {
+            words_file_p = &WORDS_FILENAME;
+        }
+    }
+    ~CommandLineParser() {
+        if (words_file_p != nullptr and words_file_p != &WORDS_FILENAME)
+            delete words_file_p;
+    }
+
+    void print_help(const std::string& prog_name) {
+        std::cout << "Usage: " << prog_name << "[word_list] [--test] [--help]\n"
+            << "    word_list  - Filename of wordlist to use (one per line).\n"
+            << "                 Default: pwd/" << WORDS_FILENAME << "\n"
+            << "    --search   - Run a non-interactive search for the best starting word.\n"
+            << "    --test     - Run a basic non-interactive test.\n"
+            << "    --help     - Print this message and exit."
+            << std::endl;
+    }
+};
+
+
+int main(int argc, char** argv) {
+    CommandLineParser args;
+    try {
+        args = CommandLineParser(argc, argv);
+    } catch (const std::exception& exc) {
+        std::cerr << exc.what() << std::endl;
+        return 1;
+    }
+
+    if (args.recieved_help_arg) {
+        args.print_help(argv[0]);
         return 0;
-    } else if (argc == 2) {
-        words_file_p = new std::string(argv[1]);
-    } else {
-        words_file_p = &WORDS_FILENAME;
     }
 
     std::vector<WordArray> possible_guesses = convert_words(
         get_words_from_file(
-            *words_file_p
+            *args.words_file_p
         )
     );
     std::vector<WordArray> possible_answers(possible_guesses);
-    if (argc == 2) {
-        delete words_file_p;
-    }
-
     WordRestriction restriction;
 
-    test(possible_answers, possible_guesses, restriction);
-    return 0;
-    /*
-    print_suggestions(
-        possible_guesses,
-        possible_answers,
-        restriction
-    );
-    return 0;*/
+    if (args.do_test) {
+        test(possible_answers, possible_guesses, restriction);
+        return 0;
+    } else if (args.do_big_search) {
+        print_suggestions(
+            possible_guesses,
+            possible_answers,
+            restriction
+        );
+        return 0;
+    }
 
     while (true) {
         std::cout << "\nRemaining Solutions: " << possible_answers.size() << "\n" << std::endl;

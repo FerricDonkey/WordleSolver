@@ -203,7 +203,7 @@ void WordRestriction::update_from_word_guess(
 
     // If I know that a word as at least 2 os, then I know that it can't have more than
     // 3 of anything else. Make those adjustments
-    uint32_t sum_of_mins = std::accumulate(min_possible.begin(), min_possible.end(), 0);
+    small_unsigned sum_of_mins = std::accumulate(min_possible.begin(), min_possible.end(), 0);
     if (sum_of_mins > WORD_LENGTH) {
         std::string error_msg = (
             std::string("ERROR: Sum of minimum counts of letters is ")
@@ -217,13 +217,13 @@ void WordRestriction::update_from_word_guess(
 
     if (sum_of_mins > 0) {
         for (uint32_t letter = 0; letter < 26; letter++) {
-            uint32_t max_from_loc_data = 0;
+            small_unsigned max_from_loc_data = 0;
             for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
                 max_from_loc_data += can_letter_be_at_index(letter, letter_index);
             }
             max_possible[letter] = std::min({
                 max_possible[letter],
-                WORD_LENGTH - sum_of_mins + min_possible[letter],
+                (small_unsigned) (WORD_LENGTH - sum_of_mins + min_possible[letter]),
                 max_from_loc_data
             });
         }

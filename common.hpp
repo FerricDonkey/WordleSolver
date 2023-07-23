@@ -2,13 +2,17 @@
 #define common_hpp
 
 #include<array>
+#include<stdint.h>
 
-constexpr unsigned int WORD_LENGTH = 5;
-constexpr unsigned int ALPHABET_LENGTH = 26;
+typedef uint8_t small_unsigned;
+typedef int8_t  small_signed;
 
-typedef std::array<uint32_t, WORD_LENGTH> WordArray;
-typedef std::array<uint32_t, ALPHABET_LENGTH> AlphabetArray;
-typedef std::array<int, WORD_LENGTH> ResponseArray;
+constexpr small_unsigned WORD_LENGTH = 5;
+constexpr small_unsigned ALPHABET_LENGTH = 26;
+
+typedef std::array<small_unsigned, WORD_LENGTH> WordArray;
+typedef std::array<small_unsigned, ALPHABET_LENGTH> AlphabetArray;
+typedef std::array<small_signed, WORD_LENGTH> ResponseArray;
 
 constexpr ResponseArray EMPTY_RESPONSE = {};
 constexpr AlphabetArray EMPTY_ALPHABET_ARRAY = {};

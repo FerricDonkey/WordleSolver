@@ -57,7 +57,7 @@ class WordRestriction {
 public:
     AlphabetArray min_possible = EMPTY_ALPHABET_ARRAY;
     AlphabetArray max_possible = WORD_LEN_ALPHABET_ARRAY;
-    WordArray pos_to_allowed = {  // Ugh
+    std::array<uint32_t, WORD_LENGTH> pos_to_allowed = {  // Ugh - this is gross initialization
         ANY_CHAR, ANY_CHAR, ANY_CHAR, ANY_CHAR, ANY_CHAR
     };
 

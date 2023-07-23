@@ -26,7 +26,7 @@ inline ResponseArray calculate_response(
     AlphabetArray letter_count = EMPTY_ALPHABET_ARRAY;
     AlphabetArray letter_to_green_count = EMPTY_ALPHABET_ARRAY;
 
-    for (int index = 0; index < WORD_LENGTH; index++) {
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
         if (answer[index] == guess[index]) {
             response[index] = 2;
             letter_to_green_count[answer[index]] += 1;
@@ -34,7 +34,7 @@ inline ResponseArray calculate_response(
         letter_count[answer[index]]++;
     }
 
-    for (int index = 0; index < WORD_LENGTH; index++) {
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
         if (
             guess[index] != answer[index]
             && letter_count[guess[index]] > letter_to_green_count[guess[index]]

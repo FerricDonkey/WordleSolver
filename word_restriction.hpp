@@ -11,7 +11,7 @@
 // binary number with 1 in bits 0-2WORD_LENGTH, inclusive
 static const uint32_t ANY_CHAR = 0x3ffffff;
 
-constexpr AlphabetArray CHAR_FLAGS = {
+constexpr std::array<uint32_t, ALPHABET_LENGTH> CHAR_FLAGS = {
     0x1,
     0x2,
     0x4,
@@ -68,8 +68,8 @@ public:
     );
 
     bool can_provide_new_information(const WordArray& word) const;
-    bool can_letter_be_at_index(uint32_t letter, int index) const;
-    uint32_t num_possible_letters_at_loc(int index) const;
+    bool can_letter_be_at_index(uletter_int letter, uletter_int index) const;
+    uletter_int num_possible_letters_at_loc(uletter_int index) const;
 
     bool is_word_allowed(const WordArray& word) const;
     std::vector<int> get_surviving_word_indexes(
@@ -82,8 +82,8 @@ public:
     void print() const;
 
 private:
-    void _remove_char_possibility(uint32_t to_remove, int index);
-    void _set_only_char_possibility(uint32_t to_set, int index);
+    void _remove_char_possibility(uletter_int to_remove, uletter_int index);
+    void _set_only_char_possibility(uletter_int to_set, uletter_int index);
 };
 
 #endif

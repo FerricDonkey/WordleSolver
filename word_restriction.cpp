@@ -83,7 +83,7 @@ bool WordRestriction::can_provide_new_information(
     #pragma omp threadprivate(letter_counts)
     letter_counts.fill(0);
 
-    for (int index = 0; index < WORD_LENGTH; index++) {
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
         if (
             can_letter_be_at_index(word[index], index)
             && num_possible_letters_at_loc(index) > 1
@@ -94,8 +94,8 @@ bool WordRestriction::can_provide_new_information(
     }
 
     uint32_t seen_letters = 0;
-    for (int index = 0; index < WORD_LENGTH; index++) {
-        uint32_t letter = word[index];
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
+        uletter_int letter = word[index];
         if (seen_letters & CHAR_FLAGS[letter]) {
             continue;
         }
@@ -112,27 +112,27 @@ bool WordRestriction::can_provide_new_information(
 
 void WordRestriction::print() const {
     std::cout << "Positional info:";
-    for (int index = 0; index < WORD_LENGTH; index++) {
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
         std::cout << "\n  "<< index <<":";
-        for (int letter = 0; letter < 26; letter++) {
+        for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
             if (can_letter_be_at_index(letter, index)) {
                 std::cout << " " << (char) (letter + 'a');
             }
         }
     }
     std::cout << "\n\nCount Info:";
-    for (int letter = 0; letter < 26; letter++) {
+    for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
         std::cout << "\n  " << (char) (letter + 'a') << ": "
-            << min_possible[letter] << " to " << max_possible[letter];
+            << (int) min_possible[letter] << " to " << (int) max_possible[letter];
     }
     std::cout << std::endl;
 }
 
-bool WordRestriction::can_letter_be_at_index(uint32_t letter, int index) const {
+bool WordRestriction::can_letter_be_at_index(uletter_int letter, uletter_int index) const {
     return pos_to_allowed[index] & CHAR_FLAGS[letter];
 }
 
-uint32_t WordRestriction::num_possible_letters_at_loc(int index) const {
+uletter_int WordRestriction::num_possible_letters_at_loc(uletter_int index) const {
     return std::popcount(pos_to_allowed[index]);
 }
 
@@ -147,8 +147,8 @@ void WordRestriction::update_from_word_guess(
 
     // Handle individual index knowledge, and count how many letters
     // were in the submitted word / are in the solution word.
-    for (int index = 0; index < WORD_LENGTH; index++) {
-        uint32_t this_letter = guess[index];
+    for (uletter_int index = 0; index < WORD_LENGTH; index++) {
+        uletter_int this_letter = guess[index];
         submitted_letter_counts[this_letter]++;
 
         switch (response[index]) {
@@ -170,7 +170,7 @@ void WordRestriction::update_from_word_guess(
     // Adjust min/max possible of each letter according to above counts.
     // AND removing gray letters from other locations, as possible
     uint32_t seen_letters = 0;
-    for (uint32_t letter: guess) {
+    for (uletter_int letter: guess) {
         if (seen_letters & CHAR_FLAGS[letter]) {
             continue;
         }
@@ -191,7 +191,7 @@ void WordRestriction::update_from_word_guess(
             submitted_letter_counts[letter] > response_letter_counts[letter] // there was a gray <letter>
             && response_letter_counts[letter] == green_counts[letter] // we know where any/all such <letters> are
         ){
-            for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
+            for (uletter_int letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
                 // If response was 2, no need to change it
                 if (response[letter_index] != 2) {
                     _remove_char_possibility(letter, letter_index);
@@ -203,7 +203,7 @@ void WordRestriction::update_from_word_guess(
 
     // If I know that a word as at least 2 os, then I know that it can't have more than
     // 3 of anything else. Make those adjustments
-    small_unsigned sum_of_mins = std::accumulate(min_possible.begin(), min_possible.end(), 0);
+    uletter_int sum_of_mins = std::accumulate(min_possible.begin(), min_possible.end(), 0);
     if (sum_of_mins > WORD_LENGTH) {
         std::string error_msg = (
             std::string("ERROR: Sum of minimum counts of letters is ")
@@ -216,25 +216,25 @@ void WordRestriction::update_from_word_guess(
     }
 
     if (sum_of_mins > 0) {
-        for (uint32_t letter = 0; letter < 26; letter++) {
-            small_unsigned max_from_loc_data = 0;
-            for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
+        for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
+            uletter_int max_from_loc_data = 0;
+            for (uletter_int letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
                 max_from_loc_data += can_letter_be_at_index(letter, letter_index);
             }
             max_possible[letter] = std::min({
                 max_possible[letter],
-                (small_unsigned) (WORD_LENGTH - sum_of_mins + min_possible[letter]),
+                (uletter_int) (WORD_LENGTH - sum_of_mins + min_possible[letter]),
                 max_from_loc_data
             });
         }
     }
 
     // Glean additional information from maxes
-    uint32_t num_possible_letters = 0;
-    int sum_of_maxes = 0;
-    std::vector<uint32_t> possible_letters;
-    std::vector<uint32_t> impossible_letters;
-    for (uint32_t letter = 0; letter < 26; letter++) {
+    uletter_int num_possible_letters = 0;
+    uletter_int sum_of_maxes = 0;
+    std::vector<uletter_int> possible_letters;
+    std::vector<uletter_int> impossible_letters;
+    for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
         if (max_possible[letter] > 0) {
             sum_of_maxes += max_possible[letter];
             num_possible_letters++;
@@ -266,7 +266,7 @@ void WordRestriction::update_from_word_guess(
 
     // Any letters that must be in exactly 1 place and are only possible
     // in one place are the only choice for that place
-    for (uint32_t letter = 0; letter < 26; letter++) {
+    for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
         if (min_possible[letter] == 1 && max_possible[letter] == 1) {
             int first_seen = -1;
             int last_seen = -1;
@@ -292,7 +292,7 @@ void WordRestriction::update_from_word_guess(
     )) {
         std::string error_str = "ERROR: The following location(s) have no allowed letters:";
         bool found_one = false;
-        for (uint32_t letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
+        for (uletter_int letter_index = 0; letter_index < WORD_LENGTH; letter_index++) {
             if (!pos_to_allowed[letter_index]) {
                 if (found_one) error_str += ", ";
                 error_str += " ";
@@ -306,15 +306,15 @@ void WordRestriction::update_from_word_guess(
 }
 
 void WordRestriction::_remove_char_possibility(
-    uint32_t to_remove,
-    int index
+    uletter_int to_remove,
+    uletter_int index
 ) {
     pos_to_allowed[index] &= ~CHAR_FLAGS[to_remove];
 }
 
 void WordRestriction::_set_only_char_possibility(
-    uint32_t to_set,
-    int index
+    uletter_int to_set,
+    uletter_int index
 ) {
     pos_to_allowed[index] = CHAR_FLAGS[to_set];
 }

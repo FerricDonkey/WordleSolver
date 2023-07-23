@@ -4,15 +4,15 @@
 #include<array>
 #include<stdint.h>
 
-typedef uint8_t small_unsigned;
-typedef int8_t  small_signed;
+typedef uint8_t uletter_int;
+typedef int8_t  letter_int;
 
-constexpr small_unsigned WORD_LENGTH = 5;
-constexpr small_unsigned ALPHABET_LENGTH = 26;
+constexpr uletter_int WORD_LENGTH = 5;
+constexpr uletter_int ALPHABET_LENGTH = 26;
 
-typedef std::array<small_unsigned, WORD_LENGTH> WordArray;
-typedef std::array<small_unsigned, ALPHABET_LENGTH> AlphabetArray;
-typedef std::array<small_signed, WORD_LENGTH> ResponseArray;
+typedef std::array<uletter_int, WORD_LENGTH> WordArray;
+typedef std::array<uletter_int, ALPHABET_LENGTH> AlphabetArray;
+typedef std::array<letter_int, WORD_LENGTH> ResponseArray;
 
 constexpr ResponseArray EMPTY_RESPONSE = {};
 constexpr AlphabetArray EMPTY_ALPHABET_ARRAY = {};
@@ -37,6 +37,6 @@ constexpr AlphabetArray WORD_LEN_ALPHABET_ARRAY = {  // Ugh
     WORD_LENGTH
 };
 
-std::string word_vec_to_string(const WordArray& word_vec);
+std::string word_vec_to_string(const WordArray& word_arr);
 
 #endif

@@ -15,7 +15,7 @@ const std::string WORDS_FILENAME = "words_lenN_466551.txt";
 
 static inline WordArray string_to_word_arr(const std::string& word) {
     WordArray word_vec;
-    uint32_t index = 0;
+    uletter_int index = 0;
     for (auto c : word) {
         word_vec[index] = c - 'a';
         index++;
@@ -125,7 +125,7 @@ ResponseArray get_response_from_user() {
     }
 
     ResponseArray response;
-    uint32_t index = 0;
+    uletter_int index = 0;
     for (auto c : user_input) {
         response[index] = c - '0';
         index++;
@@ -178,21 +178,25 @@ int get_user_action() {
 }
 
 
-void test(
+int test(
     std::vector<WordArray>& possible_answers,
     std::vector<WordArray>& possible_guesses,
     WordRestriction& restriction
 ) {
-    auto answer = string_to_word_arr("reclz");
+    auto answer = string_to_word_arr("piano");
     auto guess1 = string_to_word_arr("tares");
     auto guess2 = string_to_word_arr("deter");
 
     auto eliminated = string_to_word_arr("below");
+    if (!restriction.is_word_allowed(answer)) {
+        std::cerr << "BUG: Restriction is flunking words before being updated" << std::endl;
+        return 1;
+    }
 
     for (const auto& guess : {guess1, guess2}) {
         auto response = calculate_response(guess, answer);
         std::cout << word_vec_to_string(guess) << " ";
-        for (auto r : response) std::cout << r << " ";
+        for (auto r : response) std::cout << (int) r << " ";
         std::cout << std::endl;
 
         restriction.update_from_word_guess(
@@ -204,6 +208,7 @@ void test(
         if (std::find(possible_answers.begin(), possible_answers.end(), eliminated) != possible_answers.end()) {
             std::cerr << "CRAPPPPP" << std::endl;
             std::cerr << restriction.is_word_allowed(eliminated) << std::endl;
+            return 1;
         }
         std::vector<WordArray> new_possible_guesses;
         new_possible_guesses.reserve(possible_guesses.size());
@@ -220,6 +225,7 @@ void test(
         possible_answers,
         restriction
     );
+    return 0;
 }
 
 
@@ -296,8 +302,7 @@ int main(int argc, char** argv) {
     WordRestriction restriction;
 
     if (args.do_test) {
-        test(possible_answers, possible_guesses, restriction);
-        return 0;
+        return test(possible_answers, possible_guesses, restriction);
     } else if (args.do_big_search) {
         print_suggestions(
             possible_guesses,

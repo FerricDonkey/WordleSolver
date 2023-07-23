@@ -1,7 +1,6 @@
 #ifndef get_suggestion_hpp
 #define get_suggestion_hpp
 
-#include <stdint.h>
 #include <vector>
 #include <string>
 #include <algorithm>

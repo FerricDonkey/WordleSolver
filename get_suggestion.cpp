@@ -155,7 +155,7 @@ void print_suggestions(
     std::cout << "\nChecked 0 of " << possible_guesses.size() << "    " << std::flush;
 
     // guess_index is signed to make omp happy
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (int64_t guess_index = 0; guess_index < possible_guesses.size(); guess_index++) {
         get_remaining_answers(
             possible_guesses[guess_index],

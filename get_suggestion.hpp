@@ -15,7 +15,7 @@ void print_suggestions(
     const WordRestriction& restriction
 );
 
-inline std::array<int, WORD_LENGTH> calculate_response(
+inline ResponseArray calculate_response(
     const WordArray& guess,
     const WordArray& answer
 );

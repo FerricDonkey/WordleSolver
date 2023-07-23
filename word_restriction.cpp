@@ -64,7 +64,7 @@ bool WordRestriction::is_word_allowed(
         index++;
     }
 
-    for (uint32_t letter: word) {
+    for (uint32_t letter = 0; letter < ALPHABET_LENGTH; letter++) {
         if (
             letter_counts[letter] > max_possible[letter]
             || letter_counts[letter] < min_possible[letter]

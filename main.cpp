@@ -161,14 +161,15 @@ int get_user_action() {
             << "Select action:\n"
             << "  1 - Enter a wordle word/response\n"
             << "  2 - Print surviving words\n"
-            << "  3 - Get suggested word\n"
-            << "  4 - Quit" << std::endl;
+            << "  3 - Get suggested word from all guesses\n"
+            << "  4 - Get suggested word from remaining answers\n"
+            << "  5 - Quit" << std::endl;
 
         std::getline(std::cin, user_input);
         if (
             user_input.size() == 1
             && user_input[0] >= '1'
-            && user_input[0] <= '4'
+            && user_input[0] <= '5'
         ) {
             return user_input[0] - '0';
         }
@@ -182,11 +183,13 @@ void test(
     std::vector<WordArray>& possible_guesses,
     WordRestriction& restriction
 ) {
-    auto answer = string_to_word_arr("cower");
-    auto guess1 = string_to_word_arr("raise");
+    auto answer = string_to_word_arr("reclz");
+    auto guess1 = string_to_word_arr("tares");
     auto guess2 = string_to_word_arr("deter");
 
-    for (const auto guess : {guess1, guess2}) {
+    auto eliminated = string_to_word_arr("below");
+
+    for (const auto& guess : {guess1, guess2}) {
         auto response = calculate_response(guess, answer);
         std::cout << word_vec_to_string(guess) << " ";
         for (auto r : response) std::cout << r << " ";
@@ -198,6 +201,10 @@ void test(
         );
         restriction.print();
         possible_answers = restriction.get_surviving_words(possible_answers);
+        if (std::find(possible_answers.begin(), possible_answers.end(), eliminated) != possible_answers.end()) {
+            std::cerr << "CRAPPPPP" << std::endl;
+            std::cerr << restriction.is_word_allowed(eliminated) << std::endl;
+        }
         std::vector<WordArray> new_possible_guesses;
         new_possible_guesses.reserve(possible_guesses.size());
         for (auto& guess : possible_guesses) {
@@ -296,6 +303,13 @@ int main(int argc, char** argv) {
                 );
                 break;
             case 4:
+                print_suggestions(
+                    possible_answers,
+                    possible_answers,
+                    restriction
+                );
+                break;
+            case 5:
                 return 0;
                 break;
         }

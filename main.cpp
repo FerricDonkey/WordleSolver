@@ -136,7 +136,7 @@ ResponseArray get_response_from_user() {
 WordArray get_word_from_user() {
     std::string user_input;
     while (true) {
-        std::cout << "Enter word (all lowercase, length "<< WORD_LENGTH << "): " << std::flush;
+        std::cout << "Enter word (all lowercase, length "<< (int) WORD_LENGTH << "): " << std::flush;
         std::getline(std::cin, user_input);
         if (
             user_input.size() == WORD_LENGTH

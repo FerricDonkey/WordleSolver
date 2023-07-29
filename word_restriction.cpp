@@ -113,7 +113,7 @@ bool WordRestriction::can_provide_new_information(
 void WordRestriction::print() const {
     std::cout << "Positional info:";
     for (uletter_int index = 0; index < WORD_LENGTH; index++) {
-        std::cout << "\n  "<< index <<":";
+        std::cout << "\n  "<< (int) index <<":";
         for (uletter_int letter = 0; letter < ALPHABET_LENGTH; letter++) {
             if (can_letter_be_at_index(letter, index)) {
                 std::cout << " " << (char) (letter + 'a');

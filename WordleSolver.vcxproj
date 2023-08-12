@@ -162,6 +162,7 @@
     <ClInclude Include="word_restriction.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="words_from_466551_trimed.txt" />
     <Text Include="words_len5_14855.txt" />
     <Text Include="words_len5_2321.txt" />
     <Text Include="words_lenN_370105.txt" />

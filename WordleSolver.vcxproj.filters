@@ -55,5 +55,8 @@
     <Text Include="words_lenN_466551.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="words_from_466551_trimed.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

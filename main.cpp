@@ -11,7 +11,7 @@
 #include "get_suggestion.hpp"
 #include "common.hpp"
 
-const std::string WORDS_FILENAME = "words_lenN_466551.txt";
+const std::string WORDS_FILENAME = "words_from_466551_trimed.txt";
 
 static inline WordArray string_to_word_arr(const std::string& word) {
     WordArray word_vec;

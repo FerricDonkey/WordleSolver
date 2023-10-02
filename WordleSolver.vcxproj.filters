@@ -58,5 +58,11 @@
     <Text Include="words_from_466551_trimed.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="words_2310_from_wordle_source_simple.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="words_14855_from_wordle_source.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

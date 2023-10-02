@@ -162,6 +162,8 @@
     <ClInclude Include="word_restriction.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="words_14855_from_wordle_source.txt" />
+    <Text Include="words_2310_from_wordle_source_simple.txt" />
     <Text Include="words_from_466551_trimed.txt" />
     <Text Include="words_len5_14855.txt" />
     <Text Include="words_len5_2321.txt" />

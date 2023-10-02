@@ -212,7 +212,17 @@ void print_suggestions(
             << std::setw(7) << stddevs[guess_index] << " |"
             << (
                 restriction.is_word_allowed(possible_guesses[guess_index])
-                ? " (possible answer)" : ""
+                ? " (un-eliminated)" : ""
+            )
+            // TODO: This is stupid inefficient, but it also probably won't matter.
+            //       But maybe make it better anyway, out of principle.
+            << (
+                std::find(
+                    possible_answers.begin(),
+                    possible_answers.end(),
+                    possible_guesses[guess_index]
+                ) != possible_answers.end()
+                ? " (in remaining answer list)": ""
             )
             << std::endl;
         num_printed++;

@@ -11,7 +11,8 @@
 #include "get_suggestion.hpp"
 #include "common.hpp"
 
-const std::string WORDS_FILENAME = "words_from_466551_trimed.txt";
+const std::string ALL_GUESSES_FILENAME = "words_14855_from_wordle_source.txt";
+const std::string ALL_ANSWERS_FILENAME = "words_2310_from_wordle_source_simple.txt";
 
 static inline WordArray string_to_word_arr(const std::string& word) {
     WordArray word_vec;
@@ -234,7 +235,8 @@ public:
     bool recieved_help_arg = false;
     bool do_test = false;
     bool do_big_search = false;
-    const std::string* words_file_p = nullptr;
+    const std::string* guesses_file_p = nullptr;
+    const std::string* answers_file_p = nullptr;
 
     CommandLineParser() = default;
     CommandLineParser(int argc, char** argv) {
@@ -242,15 +244,29 @@ public:
             if (std::string("--help") == argv[arg_i]) {
                 recieved_help_arg = true;
                 return;
-            } else if (std::string("--test") == argv[arg_i]) {
-                do_test = true;
-            } else if (std::string("--search") == argv[arg_i]){
-                do_big_search = true;
-            } else {
-                if (words_file_p != nullptr) {
+            } else if (std::string("--guesses-list") == argv[arg_i]) {
+                arg_i++;
+                if (guesses_file_p != nullptr) {
                     throw std::invalid_argument("File supplied twice");
                 }
-                words_file_p = new std::string(argv[arg_i]);
+                guesses_file_p = new std::string(argv[arg_i]);
+
+            } else if (std::string("--answers-list") == argv[arg_i]) {
+                arg_i++;
+                if (answers_file_p != nullptr) {
+                    throw std::invalid_argument("File supplied twice");
+                }
+                answers_file_p = new std::string(argv[arg_i]);
+
+            } else if (std::string("--test") == argv[arg_i]) {
+                do_test = true;
+            } else if (std::string("--search") == argv[arg_i]) {
+                do_big_search = true;
+
+            } else {
+                throw std::invalid_argument(
+                    std::string("Unrecognized argument ") + argv[arg_i]
+                );
             }
         }
 
@@ -258,22 +274,29 @@ public:
             throw std::invalid_argument("Cannot use --test with --search.");
         }
 
-        if (words_file_p == nullptr) {
-            words_file_p = &WORDS_FILENAME;
+        if (guesses_file_p == nullptr) {
+            guesses_file_p = &ALL_GUESSES_FILENAME;
+        }
+        if (answers_file_p == nullptr) {
+            answers_file_p = &ALL_ANSWERS_FILENAME;
         }
     }
     ~CommandLineParser() {
-        if (words_file_p != nullptr and words_file_p != &WORDS_FILENAME)
-            delete words_file_p;
+        if (guesses_file_p != nullptr and guesses_file_p != &ALL_GUESSES_FILENAME)
+            delete guesses_file_p;
+        if (answers_file_p != nullptr and answers_file_p != &ALL_ANSWERS_FILENAME)
+            delete answers_file_p;
     }
 
     void print_help(const std::string& prog_name) {
         std::cout << "Usage: " << prog_name << "[word_list] [--test] [--help]\n"
-            << "    word_list  - Filename of wordlist to use (one per line).\n"
-            << "                 Default: pwd/" << WORDS_FILENAME << "\n"
-            << "    --search   - Run a non-interactive search for the best starting word.\n"
-            << "    --test     - Run a basic non-interactive test.\n"
-            << "    --help     - Print this message and exit."
+            << "    --guesses-list  - Filename of guesses list to use (one per line).\n"
+            << "                      Default: pwd/" << ALL_GUESSES_FILENAME << "\n"
+            << "    --answers-list  - Filename of answers list to use (one per line).\n"
+            << "                      Default: pwd/" << ALL_ANSWERS_FILENAME << "\n"
+            << "    --search        - Run a non-interactive search for the best starting word.\n"
+            << "    --test          - Run a basic non-interactive test.\n"
+            << "    --help          - Print this message and exit."
             << std::endl;
     }
 };
@@ -295,10 +318,14 @@ int main(int argc, char** argv) {
 
     std::vector<WordArray> possible_guesses = convert_words(
         get_words_from_file(
-            *args.words_file_p
+            *args.guesses_file_p
         )
     );
-    std::vector<WordArray> possible_answers(possible_guesses);
+    std::vector<WordArray> possible_answers = convert_words(
+        get_words_from_file(
+            *args.answers_file_p
+        )
+    );
     WordRestriction restriction;
 
     if (args.do_test) {

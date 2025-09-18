@@ -232,10 +232,8 @@ void WordRestriction::update_from_word_guess(
     // Glean additional information from maxes
     uletter_int num_possible_letters = 0;
     uletter_int sum_of_maxes = 0;
-    static std::vector<uletter_int> possible_letters;
-    static std::vector<uletter_int> impossible_letters;
-    #pragma omp threadprivate(possible_letters)
-    #pragma omp threadprivate(impossible_letters)
+    thread_local std::vector<uletter_int> possible_letters;
+    thread_local std::vector<uletter_int> impossible_letters;
     possible_letters.clear();
     impossible_letters.clear();
 
